@@ -14,11 +14,11 @@ from flask_cors import CORS
 from googleapiclient.discovery import build
 import urllib.parse as urlparse
 
-# ---- Setup ----
+
 nltk.download('stopwords', quiet=True)
 load_dotenv()
 
-# Replace with your actual API keys
+
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
@@ -26,9 +26,9 @@ genai.configure(api_key=GOOGLE_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 app = Flask(__name__)
-CORS(app) # Enable CORS for all routes
+CORS(app) 
 
-# ---- Core Logic Functions (from your original script) ----
+
 
 def clean_comment(text):
     text = str(text)
@@ -94,7 +94,7 @@ def analyze_and_summarize_video(video_id):
     try:
         youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
-        # Fetch video title and tags
+        
         video_request = youtube.videos().list(
             part="snippet",
             id=video_id
@@ -104,7 +104,7 @@ def analyze_and_summarize_video(video_id):
         video_title = video_snippet['title']
         tags = ", ".join(video_snippet.get('tags', []))
         
-        # Fetch comments
+        
         comments = []
         comments_request = youtube.commentThreads().list(
             part="snippet",
@@ -130,7 +130,7 @@ def analyze_and_summarize_video(video_id):
         sentiment_scores_df = comments_df['clean_comment'].apply(analyzer.polarity_scores).apply(pd.Series)
         merged_df = pd.concat([comments_df, sentiment_scores_df], axis=1)
 
-        # Get top comments for each sentiment
+        
         top_comments = {
             'positive': merged_df.sort_values(by='compound', ascending=False)['clean_comment'].head(5).tolist(),
             'negative': merged_df.sort_values(by='compound')['clean_comment'].head(5).tolist(),
@@ -138,12 +138,12 @@ def analyze_and_summarize_video(video_id):
         
         merged_df['keywords'] = merged_df['clean_comment'].apply(extract_keywords)
 
-        # Calculate sentiment and get top keywords
+        
         avg_sentiment = merged_df[['compound', 'pos', 'neu', 'neg']].mean().to_dict()
         all_keywords = [word for sublist in merged_df['keywords'] for word in sublist]
         top_keywords = [w for w, _ in Counter(all_keywords).most_common(5)]
 
-        # Generate summaries
+        
         rule_based_summary = build_summary(avg_sentiment['compound'], top_keywords)
         prompt = build_prompt(video_title, tags, avg_sentiment, top_keywords, top_comments)
         gemini_summary = generate_gemini_summary(prompt)
@@ -182,6 +182,5 @@ def summarize_video_api():
     return jsonify(summary_data)
 
 if __name__ == '__main__':
-    # To run, use `flask run` in the terminal from the backend directory.
-    # On Windows, you might need to use `set FLASK_APP=app.py` before `flask run`.
+    
     app.run(debug=True)
