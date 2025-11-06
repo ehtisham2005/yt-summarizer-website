@@ -1,140 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Comment Summarizer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f4f9;
-        }
-        .summary-container {
-            transition: all 0.3s ease-in-out;
-            transform: scale(1);
-        }
-        .summary-container:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
-        .spinner {
-            border-top-color: transparent;
-            border-left-color: #ef4444;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Comment Summarizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f9fafb 0%, #f1f5f9 100%);
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+    .glass:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+    .spinner {
+      border-top-color: transparent;
+      border-left-color: #dc2626;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in {
+      animation: fadeIn 0.6s ease-in-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
 
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl mt-12 mb-8">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl sm:text-5xl font-bold text-red-600 mb-2">YouTube Comment Summarizer</h1>
-            <p class="text-md sm:text-lg text-gray-600">Enter a video URL and get an AI-powered summary of the comments.</p>
-        </header>
+<body class="flex flex-col items-center justify-start p-6">
 
-        <div class="flex flex-col sm:flex-row gap-4 mb-8">
-            <input type="text" id="videoUrl" placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                   class="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300">
-            <button id="summarizeBtn"
-                    class="bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300">
-                Summarize
-            </button>
+  <!-- Header -->
+  <header class="w-full text-center py-10 bg-gradient-to-r from-red-600 via-pink-600 to-red-400 text-white rounded-2xl shadow-lg mb-10">
+    <h1 class="text-5xl font-extrabold tracking-tight mb-3">🎬 YouTube Comment Summarizer</h1>
+    <p class="text-lg opacity-90">Analyze viewer sentiment & get instant AI-powered insights</p>
+  </header>
+
+  <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    
+    <!-- Left: How It Works -->
+    <aside class="glass rounded-2xl p-8 fade-in">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">🧭 How It Works</h2>
+      <ol class="list-decimal list-inside text-gray-700 space-y-3">
+        <li><strong>Paste a YouTube link</strong> of any public video.</li>
+        <li>Click <strong>“Summarize”</strong> to fetch & analyze comments.</li>
+        <li>AI detects <strong>sentiments</strong> & <strong>key phrases</strong>.</li>
+        <li>Gemini crafts a detailed <strong>AI-generated summary</strong>.</li>
+      </ol>
+
+      <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">💡 What It Does</h2>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Summarizes audience reactions using Gemini AI.</li>
+        <li>Visualizes sentiment and phrase insights beautifully.</li>
+        <li>Helps creators understand audience engagement fast.</li>
+      </ul>
+
+      <div class="mt-8 p-4 bg-gradient-to-r from-pink-100 to-red-50 rounded-lg border border-pink-200 text-gray-700">
+        <p><strong>Tip:</strong> Works best on videos with ≥ 50 comments.</p>
+      </div>
+    </aside>
+
+    <!-- Right: Summarizer -->
+    <div class="lg:col-span-2 glass w-full rounded-2xl p-8">
+      <div class="flex flex-col sm:flex-row gap-4 mb-8">
+        <input type="text" id="videoUrl" placeholder="Paste YouTube video link..."
+          class="flex-1 p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300 text-gray-800 placeholder-gray-400" />
+        <button id="summarizeBtn"
+          class="bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">
+          🚀 Summarize
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="hidden flex flex-col items-center justify-center py-12 fade-in">
+        <div class="spinner w-12 h-12 border-4 border-gray-300 rounded-full"></div>
+        <p class="mt-4 text-gray-600 text-lg font-medium">Analyzing comments with AI...</p>
+      </div>
+
+      <!-- Error -->
+      <div id="error" class="hidden bg-red-100 text-red-700 p-4 rounded-lg text-center font-medium fade-in"></div>
+
+      <!-- Results -->
+      <div id="results" class="hidden fade-in">
+        <h2 id="videoTitle" class="text-3xl font-bold text-gray-800 mb-6 text-center"></h2>
+
+        <!-- Summaries -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <div class="glass p-6 rounded-xl">
+            <h3 class="text-xl font-semibold text-red-600 mb-3">🧩 Rule-based Summary</h3>
+            <p id="ruleBasedSummary" class="text-gray-700 leading-relaxed"></p>
+          </div>
+
+          <div class="glass p-6 rounded-xl">
+            <h3 class="text-xl font-semibold text-pink-600 mb-3">🤖 AI-generated Summary (Gemini)</h3>
+            <p id="geminiSummary" class="text-gray-700 leading-relaxed"></p>
+          </div>
         </div>
 
-        <div id="loading" class="hidden flex flex-col items-center justify-center p-8">
-            <div class="spinner w-12 h-12 border-4 border-gray-200 rounded-full"></div>
-            <p class="mt-4 text-gray-500 text-lg">Analyzing comments...</p>
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <div class="glass p-6 rounded-xl fade-in">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">📊 Sentiment Distribution</h3>
+            <canvas id="sentimentChart" height="120"></canvas>
+          </div>
+
+          <div class="glass p-6 rounded-xl fade-in">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">🔑 Top Keywords Frequency</h3>
+            <canvas id="keywordChart" height="120"></canvas>
+          </div>
         </div>
 
-        <div id="error" class="hidden bg-red-100 text-red-700 p-4 rounded-lg text-center font-medium">
+        <!-- Weighted Phrases -->
+        <div class="glass p-6 rounded-xl fade-in">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">💬 Top Weighted Phrases</h3>
+          <ul id="phraseList" class="list-disc list-inside text-gray-700 space-y-2 mb-6"></ul>
+          <canvas id="phraseChart" height="120"></canvas>
         </div>
-
-        <div id="results" class="hidden">
-            <h2 id="videoTitle" class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6"></h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="summary-container bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                    <h3 class="text-xl font-bold text-gray-700 mb-3">Rule-based Summary</h3>
-                    <p id="ruleBasedSummary" class="text-gray-600 leading-relaxed"></p>
-                </div>
-                
-                <div class="summary-container bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                    <h3 class="text-xl font-bold text-gray-700 mb-3">AI-generated Summary (Gemini)</h3>
-                    <p id="geminiSummary" class="text-gray-600 leading-relaxed"></p>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
 
-    <footer class="mt-auto text-center p-4 text-gray-500">
-        <p>&copy; 2024 YouTube Summarizer. All rights reserved.</p>
-    </footer>
+  <footer class="text-gray-500 text-center mt-auto pb-4">
+    <p>© 2025 YouTube Summarizer</p>
+  </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const summarizeBtn = document.getElementById('summarizeBtn');
-            const videoUrlInput = document.getElementById('videoUrl');
-            const loadingDiv = document.getElementById('loading');
-            const resultsDiv = document.getElementById('results');
-            const errorDiv = document.getElementById('error');
+  <!-- Script -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const summarizeBtn = document.getElementById('summarizeBtn');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const loadingDiv = document.getElementById('loading');
+    const resultsDiv = document.getElementById('results');
+    const errorDiv = document.getElementById('error');
+    const backendUrl = 'http://127.0.0.1:5000/summarize';
 
-            const backendUrl = 'http://127.0.0.1:5000/summarize';
+    let sentimentChart, keywordChart, phraseChart;
 
-            summarizeBtn.addEventListener('click', async () => {
-                const videoUrl = videoUrlInput.value.trim();
+    summarizeBtn.addEventListener('click', async () => {
+      const videoUrl = videoUrlInput.value.trim();
+      if (!videoUrl) return displayError('Please enter a YouTube video URL.');
 
-                if (!videoUrl) {
-                    displayError('Please enter a YouTube video URL.');
-                    return;
-                }
+      loadingDiv.classList.remove('hidden');
+      resultsDiv.classList.add('hidden');
+      errorDiv.classList.add('hidden');
 
-                // Show loading state and hide previous results/errors
-                loadingDiv.classList.remove('hidden');
-                resultsDiv.classList.add('hidden');
-                errorDiv.classList.add('hidden');
-
-                try {
-                    const response = await fetch(backendUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ video_url: videoUrl }),
-                    });
-
-                    const data = await response.json();
-                    loadingDiv.classList.add('hidden');
-
-                    if (response.ok) {
-                        displayResults(data);
-                    } else {
-                        displayError(data.error || 'An unknown error occurred.');
-                    }
-
-                } catch (e) {
-                    console.error('Fetch error:', e);
-                    loadingDiv.classList.add('hidden');
-                    displayError('Failed to connect to the backend server. Please ensure your Python Flask backend is running and accessible at ' + backendUrl + '.');
-                }
-            });
-
-            function displayResults(data) {
-                document.getElementById('videoTitle').textContent = data.video_title;
-                document.getElementById('ruleBasedSummary').innerHTML = data.rule_based_summary;
-                document.getElementById('geminiSummary').innerHTML = data.gemini_summary;
-                resultsDiv.classList.remove('hidden');
-            }
-
-            function displayError(message) {
-                errorDiv.textContent = message;
-                errorDiv.classList.remove('hidden');
-            }
+      try {
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ video_url: videoUrl }),
         });
-    </script>
+
+        const data = await response.json();
+        loadingDiv.classList.add('hidden');
+
+        if (response.ok) displayResults(data);
+        else displayError(data.error || 'An unknown error occurred.');
+      } catch (e) {
+        console.error('Fetch error:', e);
+        loadingDiv.classList.add('hidden');
+        displayError('⚠️ Cannot connect to backend. Make sure Flask is running.');
+      }
+    });
+
+    function displayResults(data) {
+      document.getElementById('videoTitle').textContent = data.video_title;
+      document.getElementById('ruleBasedSummary').innerHTML = data.rule_based_summary;
+
+      // Show Gemini short summary initially
+      const summaryContainer = document.getElementById('geminiSummary');
+      summaryContainer.innerHTML = data.gemini_summary_short || "No concise summary available.";
+
+      // Store both versions for toggle
+      summaryContainer.dataset.short = data.gemini_summary_short || "";
+      summaryContainer.dataset.full = data.gemini_summary_full || "";
+
+      // Add toggle button dynamically if not present
+      const existingBtn = document.getElementById('toggleSummaryBtn');
+      if (!existingBtn) {
+        const btn = document.createElement('button');
+        btn.id = 'toggleSummaryBtn';
+        btn.className = 'mt-4 bg-gradient-to-r from-pink-500 to-red-500 text-white py-2 px-4 rounded-lg shadow-md hover:scale-105 transition-all duration-300';
+        btn.textContent = '📖 View Full Report';
+        btn.addEventListener('click', toggleSummary);
+        summaryContainer.parentNode.appendChild(btn);
+      }
+
+      resultsDiv.classList.remove('hidden');
+
+      if (data.sentiment_data) renderSentimentChart(data.sentiment_data);
+      if (data.top_keywords) renderKeywordChart(data.top_keywords);
+      if (data.top_keywords) renderWeightedPhrases(data.top_keywords);
+    }
+
+    // ================= Toggle Between Concise and Full =================
+    function toggleSummary() {
+      const summaryContainer = document.getElementById('geminiSummary');
+      const btn = document.getElementById('toggleSummaryBtn');
+      const isShort = summaryContainer.innerHTML.trim() === summaryContainer.dataset.short.trim();
+
+      if (isShort) {
+        summaryContainer.innerHTML = summaryContainer.dataset.full;
+        btn.textContent = '🧾 View Concise Summary';
+      } else {
+        summaryContainer.innerHTML = summaryContainer.dataset.short;
+        btn.textContent = '📖 View Full Report';
+      }
+    }
+
+    // ================= Sentiment Chart =================
+    function renderSentimentChart(sentimentData) {
+      const ctx = document.getElementById('sentimentChart').getContext('2d');
+      if (sentimentChart) sentimentChart.destroy();
+      sentimentChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(sentimentData),
+          datasets: [{
+            data: Object.values(sentimentData),
+            backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
+            borderWidth: 2,
+          }],
+        },
+        options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } },
+      });
+    }
+
+    // ================= Keyword Chart =================
+    function renderKeywordChart(keywordData) {
+      const ctx = document.getElementById('keywordChart').getContext('2d');
+      if (keywordChart) keywordChart.destroy();
+
+      const labels = Object.keys(keywordData);
+      const weights = labels.map(k => (typeof keywordData[k] === 'object' ? keywordData[k].score : keywordData[k]));
+
+      keywordChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Keyword Weight',
+            data: weights,
+            backgroundColor: '#3b82f6',
+            borderRadius: 8,
+          }],
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Keywords' } },
+            y: { title: { display: true, text: 'Weight' }, beginAtZero: true },
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    // ================= Weighted Phrase List & Chart =================
+    function renderWeightedPhrases(phrases) {
+      const list = document.getElementById('phraseList');
+      list.innerHTML = '';
+
+      Object.entries(phrases).forEach(([phrase, data]) => {
+        const weight = (typeof data === 'object' ? data.score : data) || 0;
+        const members = data.members ? ` <span class="text-gray-500 text-sm">(includes: ${data.members.join(', ')})</span>` : '';
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${phrase}</strong> — weight: ${(weight * 100).toFixed(2)}%${members}`;
+        list.appendChild(li);
+      });
+
+      const labels = Object.keys(phrases);
+      const weights = labels.map(k => (typeof phrases[k] === 'object' ? phrases[k].score : phrases[k]));
+
+      const ctx = document.getElementById('phraseChart').getContext('2d');
+      if (phraseChart) phraseChart.destroy();
+      phraseChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Weighted Importance',
+            data: weights,
+            backgroundColor: '#ec4899',
+            borderRadius: 8,
+          }],
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Phrases' } },
+            y: { title: { display: true, text: 'Normalized Weight' }, beginAtZero: true },
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    function displayError(message) {
+      errorDiv.textContent = message;
+      errorDiv.classList.remove('hidden');
+    }
+  });
+</script>
+
+
 </body>
 </html>
