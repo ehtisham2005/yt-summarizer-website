@@ -13,7 +13,7 @@ import math
 import re
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
+from groq import Groq  # 👈 New Import
 
 # ==============================
 #      INITIAL SETUP
@@ -27,17 +27,17 @@ nltk.download("punkt", quiet=True)
 nltk.download("averaged_perceptron_tagger_eng", quiet=True)
 stop_words = set(stopwords.words("english"))
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# Get Keys
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
-if not GOOGLE_API_KEY or not YOUTUBE_API_KEY:
+if not GROQ_API_KEY or not YOUTUBE_API_KEY:
     print("⚠️ Missing API keys. Please check your .env file.")
 else:
     print("✅ API keys loaded successfully")
 
-# ✅ Gemini model
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel("models/gemini-2.0-flash")
+# ✅ Initialize Groq Client
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 
 # ==============================
@@ -232,7 +232,7 @@ def cluster_similar_phrases(weighted_phrases, similarity_threshold=0.8):
 
 
 # ==============================
-#    GEMINI SUMMARIZATION
+#    GROQ SUMMARIZATION
 # ==============================
 def generate_ai_summaries(video_title, comments, phrases):
     phrase_list = [f"{k} (score={v['score']:.3f})" for k, v in phrases.items()]
@@ -250,23 +250,24 @@ Write a full-length insights report including:
 - Recommendations for the creator
 Make it detailed and professional.
 """
-
-    short_prompt = f"""
-Summarize audience discussion for the YouTube video "{video_title}" briefly (2-3 paragraphs max).
-Focus on:
-- Key discussion topics
-- Overall viewer sentiment
-- A short recommendation for the creator
-Keep it concise and easy to read.
-"""
-
+    
     try:
-        full_response = model.generate_content(full_prompt)
-        short_response = model.generate_content(short_prompt)
-        return full_response.text, short_response.text
+        completion = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile", # Highly capable, free tier model
+            messages=[
+                {"role": "system", "content": "You are a helpful YouTube analyst."},
+                {"role": "user", "content": full_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=1024,
+            top_p=1,
+            stream=False,
+            stop=None,
+        )
+        return completion.choices[0].message.content
     except Exception as e:
-        print("Gemini error:", e)
-        return "AI summary generation failed.", "AI summary generation failed."
+        print("Groq API error:", e)
+        return f"AI summary generation failed: {str(e)}"
 
 
 # ==============================
@@ -286,7 +287,10 @@ def summarize_video():
         clustered = cluster_similar_phrases(weighted, similarity_threshold=0.8)
 
         rule_summary = f"The top audience discussion revolves around {', '.join(list(clustered.keys())[:5])}."
-        full_summary, short_summary = generate_ai_summaries(title, comments, clustered)
+        
+        # Calls Groq now
+        full_summary = generate_ai_summaries(title, comments, clustered)
+        short_summary = "Short summary not available for free version"
 
         return jsonify({
             "video_title": title,
