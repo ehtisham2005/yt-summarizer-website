@@ -66,7 +66,9 @@ def preprocess_text(text: str) -> str:
 # ==============================
 def fetch_youtube_comments(video_url):
     """Fetch comments + like counts for weighting."""
-    match = re.search(r"v=([A-Za-z0-9_-]{11})", video_url)
+    regex = r"(?:v=|\/|be\/|shorts\/)([A-Za-z0-9_-]{11})"
+    match = re.search(regex, video_url)
+    
     if not match:
         raise ValueError("Invalid YouTube URL.")
     video_id = match.group(1)

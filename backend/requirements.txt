@@ -12,3 +12,5 @@ textblob
 beautifulsoup4
 scikit-learn
 sentence-transformers
+
+gunicorn==21.2.0
